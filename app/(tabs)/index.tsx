@@ -1,16 +1,22 @@
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Image, Dimensions, ActivityIndicator } from 'react-native';
 import React, { useEffect, useState } from 'react';
+import { router } from 'expo-router';
+import { FontAwesome } from '@expo/vector-icons';
 import { supabase } from '@/utils/supabase';
+import { courseService } from '@/utils/services/courses';
+import type { Course } from '@/types/database.types';
 
 const { width: screenWidth } = Dimensions.get('window');
 
 const Index = () => {
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState<any>(null);
+    const [courses, setCourses] = useState<Course[]>([]);
     const [activeSlide, setActiveSlide] = useState(0);
 
     useEffect(() => {
         checkUser();
+        loadCourses();
     }, []);
 
     const checkUser = async () => {
@@ -28,6 +34,22 @@ const Index = () => {
         }
     };
 
+    const loadCourses = async () => {
+        try {
+            const coursesData = await courseService.getAllCourses();
+            setCourses(coursesData);
+        } catch (error) {
+            console.error('Error loading courses:', error);
+        }
+    };
+
+    const navigateToCourse = (courseId: string) => {
+        router.push({
+            pathname: '/course/[id]',
+            params: { id: courseId }
+        });
+    };
+
     const renderVideo = (title: string, index: number) => (
         <TouchableOpacity key={index} style={styles.videoCard}>
             <View style={styles.videoThumbnail}>
@@ -41,16 +63,33 @@ const Index = () => {
         </TouchableOpacity>
     );
 
-    const renderCourse = (title: string, index: number) => (
-        <TouchableOpacity key={index} style={styles.courseCard}>
+    const renderCourse = (course: Course) => (
+        <TouchableOpacity 
+            key={course.id} 
+            style={styles.courseCard}
+            onPress={() => navigateToCourse(course.id)}
+        >
             <View style={styles.courseThumbnail}>
-                <Image 
-                    source={{ uri: 'https://via.placeholder.com/200x150' }}
-                    style={styles.courseImage}
-                    resizeMode="cover"
-                />
+                {course.image_url ? (
+                    <Image 
+                        source={{ uri: course.image_url }}
+                        style={styles.courseImage}
+                        resizeMode="cover"
+                    />
+                ) : (
+                    <View style={styles.courseIcon}>
+                        <FontAwesome name="book" size={30} color="#FFFFFF" />
+                    </View>
+                )}
             </View>
-            <Text style={styles.courseTitle}>{title}</Text>
+            <Text style={styles.courseTitle}>{course.title}</Text>
+            <View style={styles.courseInfo}>
+                <View style={styles.instructorRow}>
+                    <FontAwesome name="user-circle" size={12} color="#666" />
+                    <Text style={styles.instructorText}>{course.instructor}</Text>
+                </View>
+                <Text style={styles.statsText}>{course.duration}</Text>
+            </View>
         </TouchableOpacity>
     );
 
@@ -119,9 +158,7 @@ const Index = () => {
                 <View style={[styles.section, styles.lastSection]}>
                     <Text style={styles.sectionTitle}>Courses We Offer</Text>
                     <View style={styles.coursesGrid}>
-                        {['Course 1', 'Course 2'].map((title, index) => 
-                            renderCourse(title, index)
-                        )}
+                        {courses.map((course) => renderCourse(course))}
                     </View>
                 </View>
             </ScrollView>
@@ -221,22 +258,55 @@ const styles = StyleSheet.create({
     courseCard: {
         width: '48%',
         marginBottom: 15,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 10,
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: '#EEEEEE',
     },
     courseThumbnail: {
         width: '100%',
-        height: 150,
-        backgroundColor: '#F8F8F8',
-        borderRadius: 10,
-        overflow: 'hidden',
+        height: 120,
+        backgroundColor: '#4CAF50',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    courseIcon: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    courseTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#1A1A1A',
+        marginTop: 10,
+        marginHorizontal: 12,
+    },
+    courseInfo: {
+        padding: 12,
+        paddingTop: 4,
+    },
+    instructorRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        marginBottom: 4,
+    },
+    instructorText: {
+        fontSize: 12,
+        color: '#666',
+    },
+    statsText: {
+        fontSize: 12,
+        color: '#666',
     },
     courseImage: {
         width: '100%',
         height: '100%',
-    },
-    courseTitle: {
-        marginTop: 8,
-        fontSize: 14,
-        color: '#1A1A1A',
     },
 });
 

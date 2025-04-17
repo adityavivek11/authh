@@ -1,7 +1,44 @@
-import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Image } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import { router } from 'expo-router';
+import { FontAwesome } from '@expo/vector-icons';
+import { courseService } from '@/utils/services/courses';
+import type { Course } from '@/types/database.types';
 
 export default function Courses() {
+    const [loading, setLoading] = useState(true);
+    const [courses, setCourses] = useState<Course[]>([]);
+
+    useEffect(() => {
+        loadCourses();
+    }, []);
+
+    const loadCourses = async () => {
+        try {
+            const coursesData = await courseService.getAllCourses();
+            setCourses(coursesData);
+        } catch (error) {
+            console.error('Error loading courses:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const navigateToCourse = (courseId: string) => {
+        router.push({
+            pathname: '/course/[id]',
+            params: { id: courseId }
+        });
+    };
+
+    if (loading) {
+        return (
+            <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#4CAF50" />
+            </View>
+        );
+    }
+
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
@@ -9,43 +46,41 @@ export default function Courses() {
             </View>
             
             <ScrollView style={styles.content}>
-                <TouchableOpacity style={styles.courseCard}>
-                    <View style={styles.courseImageContainer}>
-                        <Image 
-                            source={{ uri: 'https://via.placeholder.com/150' }}
-                            style={styles.courseImage}
-                        />
-                    </View>
-                    <View style={styles.courseInfo}>
-                        <Text style={styles.courseTitle}>Introduction to Programming</Text>
-                        <Text style={styles.courseDescription}>
-                            Learn the basics of programming with this comprehensive course.
-                        </Text>
-                        <View style={styles.courseFooter}>
-                            <Text style={styles.courseDuration}>12 weeks</Text>
-                            <Text style={styles.courseLevel}>Beginner</Text>
+                {courses.map((course) => (
+                    <TouchableOpacity 
+                        key={course.id} 
+                        style={styles.courseCard}
+                        onPress={() => navigateToCourse(course.id)}
+                    >
+                        <View style={styles.courseImageContainer}>
+                            {course.image_url ? (
+                                <Image 
+                                    source={{ uri: course.image_url }}
+                                    style={styles.courseImage}
+                                    resizeMode="cover"
+                                />
+                            ) : (
+                                <View style={styles.courseIcon}>
+                                    <FontAwesome name="book" size={40} color="#FFFFFF" />
+                                </View>
+                            )}
                         </View>
-                    </View>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.courseCard}>
-                    <View style={styles.courseImageContainer}>
-                        <Image 
-                            source={{ uri: 'https://via.placeholder.com/150' }}
-                            style={styles.courseImage}
-                        />
-                    </View>
-                    <View style={styles.courseInfo}>
-                        <Text style={styles.courseTitle}>Advanced Mathematics</Text>
-                        <Text style={styles.courseDescription}>
-                            Deep dive into advanced mathematical concepts and applications.
-                        </Text>
-                        <View style={styles.courseFooter}>
-                            <Text style={styles.courseDuration}>16 weeks</Text>
-                            <Text style={styles.courseLevel}>Advanced</Text>
+                        <View style={styles.courseInfo}>
+                            <Text style={styles.courseTitle}>{course.title}</Text>
+                            <View style={styles.instructorRow}>
+                                <FontAwesome name="user-circle" size={16} color="#666" />
+                                <Text style={styles.instructorText}>Instructor: {course.instructor}</Text>
+                            </View>
+                            <View style={styles.statsRow}>
+                                <Text style={styles.statText}>{course.duration}</Text>
+                                <Text style={styles.statDot}>•</Text>
+                                <Text style={styles.statText}>{course.lessons}</Text>
+                                <Text style={styles.statDot}>•</Text>
+                                <Text style={styles.statText}>{course.students}</Text>
+                            </View>
                         </View>
-                    </View>
-                </TouchableOpacity>
+                    </TouchableOpacity>
+                ))}
             </ScrollView>
         </SafeAreaView>
     );
@@ -54,6 +89,12 @@ export default function Courses() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: '#FFFFFF',
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
         backgroundColor: '#FFFFFF',
     },
     header: {
@@ -71,18 +112,30 @@ const styles = StyleSheet.create({
         padding: 16,
     },
     courseCard: {
-        backgroundColor: '#F8F8F8',
+        backgroundColor: '#FFFFFF',
         borderRadius: 12,
         marginBottom: 16,
         overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: '#EEEEEE',
     },
     courseImageContainer: {
-        height: 150,
-        backgroundColor: '#EEEEEE',
+        height: 120,
+        backgroundColor: '#4CAF50',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     courseImage: {
         width: '100%',
         height: '100%',
+    },
+    courseIcon: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     courseInfo: {
         padding: 16,
@@ -93,23 +146,27 @@ const styles = StyleSheet.create({
         color: '#1A1A1A',
         marginBottom: 8,
     },
-    courseDescription: {
-        fontSize: 16,
-        color: '#666666',
-        marginBottom: 12,
-    },
-    courseFooter: {
+    instructorRow: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 8,
+        gap: 8,
+    },
+    instructorText: {
+        fontSize: 14,
+        color: '#666',
+    },
+    statsRow: {
+        flexDirection: 'row',
         alignItems: 'center',
     },
-    courseDuration: {
+    statText: {
         fontSize: 14,
-        color: '#999999',
+        color: '#666',
     },
-    courseLevel: {
+    statDot: {
         fontSize: 14,
-        color: '#4CAF50',
-        fontWeight: '500',
+        color: '#666',
+        marginHorizontal: 8,
     },
 }); 
