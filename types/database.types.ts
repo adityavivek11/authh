@@ -38,6 +38,26 @@ export type Lecture = {
     thumbnail_url?: string;
 }
 
+export type Doubt = {
+    id: string;
+    created_at: string;
+    user_id: string;
+    title: string;
+    description: string;
+    status: 'pending' | 'answered' | 'resolved';
+    course_id?: string;
+    lecture_id?: string;
+}
+
+export type DoubtReply = {
+    id: string;
+    created_at: string;
+    doubt_id: string;
+    user_id: string;
+    content: string;
+    is_teacher: boolean;
+}
+
 export type Database = {
     public: {
         Tables: {
@@ -55,6 +75,16 @@ export type Database = {
                 Row: Lecture;
                 Insert: Omit<Lecture, 'id' | 'created_at'>;
                 Update: Partial<Omit<Lecture, 'id' | 'created_at'>>;
+            };
+            doubts: {
+                Row: Doubt;
+                Insert: Omit<Doubt, 'id' | 'created_at'>;
+                Update: Partial<Omit<Doubt, 'id' | 'created_at'>>;
+            };
+            doubt_replies: {
+                Row: DoubtReply;
+                Insert: Omit<DoubtReply, 'id' | 'created_at'>;
+                Update: Partial<Omit<DoubtReply, 'id' | 'created_at'>>;
             };
         };
     };
