@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
         borderColor: '#EEEEEE',
     },
     courseImageContainer: {
-        height: 120,
+        height: 180,
         backgroundColor: '#4CAF50',
         justifyContent: 'center',
         alignItems: 'center',

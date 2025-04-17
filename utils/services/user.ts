@@ -2,10 +2,9 @@ import { supabase } from '@/utils/supabase';
 
 export const userService = {
     async updateUserMetadata(userId: string, metadata: { full_name?: string; avatar_url?: string }) {
-        const { data, error } = await supabase.auth.admin.updateUserById(
-            userId,
-            { user_metadata: metadata }
-        );
+        const { data, error } = await supabase.auth.updateUser({
+            data: metadata
+        });
 
         if (error) {
             console.error('Error updating user metadata:', error);

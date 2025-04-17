@@ -43,18 +43,24 @@ export default function Profile() {
     };
 
     const navigateToEnrolledCourses = () => {
-        router.push('/enrolled-courses');
+        router.push({
+            pathname: '/enrolled-courses',
+            params: { preload: true }
+        });
     };
 
     const navigateToAccountSettings = () => {
-        router.push('/account-settings');
+        router.push({
+            pathname: '/account-settings',
+            params: { preload: true }
+        });
     };
 
     if (loading) {
         return (
-            <View style={styles.loadingContainer}>
+            <SafeAreaView style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="#4CAF50" />
-            </View>
+            </SafeAreaView>
         );
     }
 

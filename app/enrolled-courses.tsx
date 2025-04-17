@@ -1,15 +1,17 @@
 import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
 import React, { useEffect, useState } from 'react';
-import { router, Stack } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
 import { supabase } from '@/utils/supabase';
 import { courseService } from '@/utils/services/courses';
 import type { Course } from '@/types/database.types';
 
 export default function EnrolledCourses() {
-    const [loading, setLoading] = useState(true);
+    const { preload } = useLocalSearchParams<{ preload: string }>();
+    const [loading, setLoading] = useState(!preload);
     const [enrolledCourses, setEnrolledCourses] = useState<Course[]>([]);
     const [user, setUser] = useState<any>(null);
+    const [hasLoaded, setHasLoaded] = useState(false);
 
     useEffect(() => {
         checkUser();
@@ -28,6 +30,7 @@ export default function EnrolledCourses() {
             console.error('Error checking user:', error);
         } finally {
             setLoading(false);
+            setHasLoaded(true);
         }
     };
 
@@ -77,9 +80,9 @@ export default function EnrolledCourses() {
 
     if (loading) {
         return (
-            <View style={styles.loadingContainer}>
+            <SafeAreaView style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="#4CAF50" />
-            </View>
+            </SafeAreaView>
         );
     }
 
@@ -99,7 +102,11 @@ export default function EnrolledCourses() {
                     ),
                 }}
             />
-            {enrolledCourses.length > 0 ? (
+            {!hasLoaded ? (
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#4CAF50" />
+                </View>
+            ) : enrolledCourses.length > 0 ? (
                 <FlatList
                     data={enrolledCourses}
                     renderItem={renderCourseItem}

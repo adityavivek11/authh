@@ -1,12 +1,13 @@
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, TextInput, ActivityIndicator, Alert, ScrollView } from 'react-native';
 import React, { useEffect, useState } from 'react';
-import { router, Stack } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
 import { supabase } from '@/utils/supabase';
 import { userService } from '@/utils/services/user';
 
 export default function AccountSettings() {
-    const [loading, setLoading] = useState(true);
+    const { preload } = useLocalSearchParams<{ preload: string }>();
+    const [loading, setLoading] = useState(!preload);
     const [saving, setSaving] = useState(false);
     const [user, setUser] = useState<any>(null);
     const [formData, setFormData] = useState({
@@ -58,9 +59,9 @@ export default function AccountSettings() {
 
     if (loading) {
         return (
-            <View style={styles.loadingContainer}>
+            <SafeAreaView style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="#4CAF50" />
-            </View>
+            </SafeAreaView>
         );
     }
 

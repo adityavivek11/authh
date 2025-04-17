@@ -3,7 +3,9 @@ import React, { useEffect, useState } from 'react';
 import { router } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
 import { supabase } from '@/utils/supabase';
+import { carouselService, type CarouselImage } from '@/utils/services/carousel';
 import { courseService } from '@/utils/services/courses';
+import { standaloneLectureService, type StandaloneLecture } from '@/utils/services/standalone-lectures';
 import type { Course } from '@/types/database.types';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -12,11 +14,15 @@ const Index = () => {
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState<any>(null);
     const [courses, setCourses] = useState<Course[]>([]);
+    const [carouselImages, setCarouselImages] = useState<CarouselImage[]>([]);
+    const [standaloneLectures, setStandaloneLectures] = useState<StandaloneLecture[]>([]);
     const [activeSlide, setActiveSlide] = useState(0);
 
     useEffect(() => {
         checkUser();
         loadCourses();
+        loadCarousel();
+        loadStandaloneLectures();
     }, []);
 
     const checkUser = async () => {
@@ -43,6 +49,41 @@ const Index = () => {
         }
     };
 
+    const loadCarousel = async () => {
+        try {
+            const carouselData = await carouselService.getActiveCarouselImages();
+            setCarouselImages(carouselData);
+        } catch (error) {
+            console.error('Error loading carousel:', error);
+        }
+    };
+
+    const loadStandaloneLectures = async () => {
+        try {
+            console.log('Loading standalone lectures...');
+            const { data, error } = await supabase
+                .from('standalone_lectures')
+                .select('*')
+                .eq('is_active', true)
+                .order('display_order', { ascending: true });
+
+            if (error) {
+                console.error('Error loading standalone lectures:', error);
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                console.log('No standalone lectures found');
+                return;
+            }
+
+            console.log('Loaded standalone lectures:', data);
+            setStandaloneLectures(data);
+        } catch (error) {
+            console.error('Error in loadStandaloneLectures:', error);
+        }
+    };
+
     const navigateToCourse = (courseId: string) => {
         router.push({
             pathname: '/course/[id]',
@@ -50,18 +91,42 @@ const Index = () => {
         });
     };
 
-    const renderVideo = (title: string, index: number) => (
-        <TouchableOpacity key={index} style={styles.videoCard}>
-            <View style={styles.videoThumbnail}>
-                <Image 
-                    source={{ uri: 'https://via.placeholder.com/150x100' }}
-                    style={styles.videoImage}
-                    resizeMode="cover"
-                />
-            </View>
-            <Text style={styles.videoTitle}>{title}</Text>
-        </TouchableOpacity>
-    );
+    const navigateToLecture = (lectureId: string) => {
+        console.log('Navigating to lecture with ID:', lectureId);
+        router.push({
+            pathname: '/standalone-lecture/[id]',
+            params: { id: lectureId }
+        });
+    };
+
+    const renderLecture = (lecture: StandaloneLecture) => {
+        console.log('Rendering lecture card:', lecture);
+        return (
+            <TouchableOpacity 
+                key={lecture.id} 
+                style={styles.videoCard}
+                onPress={() => navigateToLecture(lecture.id)}
+            >
+                <View style={styles.videoThumbnail}>
+                    {lecture.thumbnail_url ? (
+                        <Image 
+                            source={{ uri: lecture.thumbnail_url }}
+                            style={styles.videoImage}
+                            resizeMode="cover"
+                        />
+                    ) : (
+                        <View style={styles.videoPlaceholder}>
+                            <FontAwesome name="play-circle" size={30} color="#4CAF50" />
+                        </View>
+                    )}
+                </View>
+                <Text style={styles.videoTitle}>{lecture.title}</Text>
+                {lecture.duration && (
+                    <Text style={styles.videoDuration}>{lecture.duration}</Text>
+                )}
+            </TouchableOpacity>
+        );
+    };
 
     const renderCourse = (course: Course) => (
         <TouchableOpacity 
@@ -116,10 +181,10 @@ const Index = () => {
                             setActiveSlide(Math.round(index));
                         }}
                     >
-                        {[1, 2, 3].map((_, index) => (
-                            <View key={index} style={styles.carouselItem}>
+                        {carouselImages.map((image) => (
+                            <View key={image.id} style={styles.carouselItem}>
                                 <Image
-                                    source={{ uri: 'https://via.placeholder.com/350x200' }}
+                                    source={{ uri: image.image_url }}
                                     style={styles.carouselImage}
                                     resizeMode="cover"
                                 />
@@ -127,7 +192,7 @@ const Index = () => {
                         ))}
                     </ScrollView>
                     <View style={styles.paginationContainer}>
-                        {[1, 2, 3].map((_, index) => (
+                        {carouselImages.map((_, index) => (
                             <View
                                 key={index}
                                 style={[
@@ -141,16 +206,14 @@ const Index = () => {
 
                 {/* Get To Know Section */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Get To Know Ayurveda ??</Text>
+                    <Text style={styles.sectionTitle}>Get To Know Ayurveda</Text>
                     <ScrollView 
                         horizontal 
                         showsHorizontalScrollIndicator={false} 
                         style={styles.videosContainer}
                         contentContainerStyle={styles.videosContentContainer}
                     >
-                        {['Video 1', 'Video 2', 'Video 3'].map((title, index) => 
-                            renderVideo(title, index)
-                        )}
+                        {standaloneLectures.map((lecture) => renderLecture(lecture))}
                     </ScrollView>
                 </View>
 
@@ -245,10 +308,22 @@ const styles = StyleSheet.create({
         width: '100%',
         height: '100%',
     },
+    videoPlaceholder: {
+        width: '100%',
+        height: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#F8F8F8',
+    },
     videoTitle: {
         marginTop: 8,
         fontSize: 14,
         color: '#1A1A1A',
+    },
+    videoDuration: {
+        fontSize: 12,
+        color: '#666',
+        marginTop: 4,
     },
     coursesGrid: {
         flexDirection: 'row',
@@ -268,8 +343,6 @@ const styles = StyleSheet.create({
         width: '100%',
         height: 120,
         backgroundColor: '#4CAF50',
-        justifyContent: 'center',
-        alignItems: 'center',
     },
     courseIcon: {
         width: 60,
