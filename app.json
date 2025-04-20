@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "exp",
+    "scheme": "com.aditya1111.auth",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -18,14 +18,32 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.aditya1111.auth"
+      "bundleIdentifier": "com.aditya1111.auth",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.aditya1111.auth"
+      "package": "com.aditya1111.auth",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "com.aditya1111.auth"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
     },
     "web": {
       "bundler": "metro",

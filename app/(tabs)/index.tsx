@@ -158,6 +158,13 @@ const Index = () => {
         </TouchableOpacity>
     );
 
+    const getGreeting = () => {
+        const hour = new Date().getHours();
+        if (hour < 12) return 'Good Morning';
+        if (hour < 18) return 'Good Afternoon';
+        return 'Good Evening';
+    };
+
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
@@ -169,6 +176,12 @@ const Index = () => {
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+                {/* Greeting Section */}
+                <View style={styles.greetingContainer}>
+                    <Text style={styles.greetingText}>{getGreeting()}</Text>
+                    {user && <Text style={styles.usernameText}>{user.user_metadata?.full_name || 'User'}</Text>}
+                </View>
+
                 {/* Carousel Section */}
                 <View style={styles.carouselContainer}>
                     <ScrollView
@@ -380,6 +393,20 @@ const styles = StyleSheet.create({
     courseImage: {
         width: '100%',
         height: '100%',
+    },
+    greetingContainer: {
+        padding: 20,
+        paddingBottom: 0,
+    },
+    greetingText: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#1A1A1A',
+    },
+    usernameText: {
+        fontSize: 18,
+        color: '#666',
+        marginTop: 4,
     },
 });
 
