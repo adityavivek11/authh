@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Image, ActivityIndicator, RefreshControl } from 'react-native';
 import { router } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
 import { courseService } from '@/utils/services/courses';
@@ -7,6 +7,7 @@ import type { Course } from '@/types/database.types';
 
 export default function Courses() {
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [courses, setCourses] = useState<Course[]>([]);
 
     useEffect(() => {
@@ -21,8 +22,14 @@ export default function Courses() {
             console.error('Error loading courses:', error);
         } finally {
             setLoading(false);
+            setRefreshing(false);
         }
     };
+
+    const onRefresh = React.useCallback(() => {
+        setRefreshing(true);
+        loadCourses();
+    }, []);
 
     const navigateToCourse = (courseId: string) => {
         router.push({
@@ -31,7 +38,7 @@ export default function Courses() {
         });
     };
 
-    if (loading) {
+    if (loading && !refreshing) {
         return (
             <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="#4CAF50" />
@@ -45,7 +52,17 @@ export default function Courses() {
                 <Text style={styles.title}>Available Courses</Text>
             </View>
             
-            <ScrollView style={styles.content}>
+            <ScrollView 
+                style={styles.content}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={['#4CAF50']}
+                        tintColor="#4CAF50"
+                    />
+                }
+            >
                 {courses.map((course) => (
                     <TouchableOpacity 
                         key={course.id} 
@@ -70,13 +87,6 @@ export default function Courses() {
                             <View style={styles.instructorRow}>
                                 <FontAwesome name="user-circle" size={16} color="#666" />
                                 <Text style={styles.instructorText}>Instructor: {course.instructor}</Text>
-                            </View>
-                            <View style={styles.statsRow}>
-                                <Text style={styles.statText}>{course.duration}</Text>
-                                <Text style={styles.statDot}>•</Text>
-                                <Text style={styles.statText}>{course.lessons}</Text>
-                                <Text style={styles.statDot}>•</Text>
-                                <Text style={styles.statText}>{course.students}</Text>
                             </View>
                         </View>
                     </TouchableOpacity>
@@ -149,24 +159,10 @@ const styles = StyleSheet.create({
     instructorRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 8,
         gap: 8,
     },
     instructorText: {
         fontSize: 14,
         color: '#666',
-    },
-    statsRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    statText: {
-        fontSize: 14,
-        color: '#666',
-    },
-    statDot: {
-        fontSize: 14,
-        color: '#666',
-        marginHorizontal: 8,
     },
 }); 
