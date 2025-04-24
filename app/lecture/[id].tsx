@@ -75,7 +75,7 @@ export default function LectureDetail() {
                     >
                         <Text style={styles.backButtonText}>Go Back</Text>
                     </TouchableOpacity>
-                </View>
+            </View>
             </SafeAreaView>
         );
     }
@@ -91,7 +91,7 @@ export default function LectureDetail() {
                     >
                         <Text style={styles.backButtonText}>Go Back</Text>
                     </TouchableOpacity>
-                </View>
+            </View>
             </SafeAreaView>
         );
     }
@@ -99,14 +99,14 @@ export default function LectureDetail() {
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView style={styles.scrollView}>
-                <VideoPlayer lecture={lecture} onProgress={handleProgress} />
-                <View style={styles.content}>
-                    <Text style={styles.title}>{lecture.title}</Text>
-                    {lecture.description && (
-                        <Text style={styles.description}>{lecture.description}</Text>
-                    )}
-                </View>
-            </ScrollView>
+            <VideoPlayer lecture={lecture} onProgress={handleProgress} />
+            <View style={styles.content}>
+                <Text style={styles.title}>{lecture.title}</Text>
+                {lecture.description && (
+                    <Text style={styles.description}>{lecture.description}</Text>
+                )}
+            </View>
+        </ScrollView>
         </SafeAreaView>
     );
 }
